@@ -1,23 +1,7 @@
-// Ionic Starter App
 
-// angular.module is a global place for creating, registering and retrieving Angular modules
-// 'starter' is the name of this angular module example (also set in a <body> attribute in index.html)
-// the 2nd parameter is an array of 'requires'
-var app = angular.module('starter', ['ionic'])
+(function() {
 
-app.controller('ListCtrl', function($scope){
-
-  $scope.notes = [
-    {
-      title: 'First Note',
-      description: 'This is my first note'
-    },
-    {
-      title: 'Second Note',
-      description: 'This is my second note'
-    }
-  ];
-});
+var app = angular.module('mynotes', ['ionic', 'mynotes.notestore'])
 
 app.config(function($stateProvider, $urlRouterProvider){
   
@@ -26,13 +10,50 @@ app.config(function($stateProvider, $urlRouterProvider){
     templateUrl: 'templates/list.html'
   });
 
+  $stateProvider.state('add', {
+    url: '/add',
+    templateUrl: 'templates/edit.html',
+    controller: 'AddCtrl'
+  });
+
   $stateProvider.state('edit', {
-    url: '/list',
-    templateUrl: 'templates/list.html'
+    url: '/edit/:noteId',
+    templateUrl: 'templates/edit.html',
+    controller:'EditCtrl'
   });
 
   $urlRouterProvider.otherwise('/list');
 });
+
+app.controller('ListCtrl', function($scope, NoteStore){
+  $scope.notes = NoteStore.list();
+  $scope.remove = function(noteId) {
+    NoteStore.remove(noteId);
+  };
+});
+
+app.controller('AddCtrl', function($scope, $state, NoteStore){
+  $scope.note = {
+  id: new Date().getTime().toString(),
+  title: '',
+  description: ''  
+  };
+
+  $scope.save = function() {
+    NoteStore.create($scope.note);
+    $state.go('list');
+  };
+});
+
+app.controller('EditCtrl', function($scope, $state, NoteStore){
+  $scope.note = angular.copy(NoteStore.get($state.params.noteId));
+
+  $scope.save = function() {
+    NoteStore.update($scope.note);
+    $state.go('list');
+  };
+});
+
 
 app.run(function($ionicPlatform) {
   $ionicPlatform.ready(function() {
@@ -50,4 +71,6 @@ app.run(function($ionicPlatform) {
       StatusBar.styleDefault();
     }
   });
-})
+});
+
+}());
